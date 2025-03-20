@@ -3,29 +3,29 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
 
-// ✅ Register Function
+// Register Function
 const register = async (req, res) => {
   try {
     const { username, email, password } = req.body;
 
-    console.log("📩 Received Registration Data:", req.body);
+    console.log(" Received Registration Data:", req.body);
 
-    // ✅ Convert email to lowercase to ensure consistency
+    // Convert email to lowercase to ensure consistency
     const emailLowerCase = email.trim();
 
-    // ✅ Check if user exists (case-insensitive)
+    // Check if user exists (case-insensitive)
     const existingUser = await User.findOne({ email: { $regex: new RegExp("^" + emailLowerCase + "$", "i") } });
     if (existingUser) {
       return res.status(400).json({ message: "❌ User already exists" });
     }
 
-    // ✅ Identify Admin
+    // Identify Admin
     const isAdmin = emailLowerCase === "Admin@admingmail.com";
 
-    // ✅ Hash password
+    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // ✅ Create user
+    // Create user
     const newUser = new User({
       username,
       email: emailLowerCase, // Store email consistently
@@ -37,47 +37,49 @@ const register = async (req, res) => {
 
     await newUser.save();
 
-    res.status(201).json({ message: "✅ Registration Successful!" });
+    res.status(201).json({ message: " Registration Successful!" });
   } catch (error) {
-    console.error("❌ Registration Error:", error.message);
+    console.error(" Registration Error:", error.message);
     res.status(500).json({ message: "Server error" });
   }
 };
 
-// ✅ Login Function
+// Login Function
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
     console.log("🔑 Login Attempt:", email);
 
-    // ✅ Convert email to lowercase for case-insensitive search
+    // Convert email to lowercase for case-insensitive search
     const emailLowerCase = email.trim();
 
-    // ✅ Find user (case-insensitive search)
+    // Find user (case-insensitive search)
     const user = await User.findOne({ email: { $regex: new RegExp("^" + emailLowerCase + "$", "i") } });
 
     if (!user) {
-      return res.status(404).json({ message: "❌ User not found" });
+      return res.status(404).json({ message: " User not found" });
     }
 
-    // ✅ Compare passwords
+    // Compare passwords
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
-      return res.status(401).json({ message: "❌ Invalid credentials" });
+      return res.status(401).json({ message: " Invalid credentials" });
     }
 
-    // ✅ Generate JWT token
+    // Generate JWT token
     const token = jwt.sign({ id: user._id, isAdmin: user.isAdmin }, process.env.JWT_SECRET, { expiresIn: "1h" });
 
-    console.log("✅ Login Successful:", email);
+    console.log(" Login Successful:", email);
 
     res.json({ token, isAdmin: user.isAdmin });
 
   } catch (error) {
-    console.error("❌ Login Error:", error.message);
+    console.error(" Login Error:", error.message);
     res.status(500).json({ message: "Server error" });
   }
 };
+
+
 
 module.exports = { register, login };
